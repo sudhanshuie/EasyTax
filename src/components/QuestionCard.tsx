@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { LawContext } from "@/components/LawContext";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { Question } from "@/data/questions";
@@ -43,7 +42,7 @@ export function QuestionCard({
   const canProceed = localValue !== "" && localValue !== null;
 
   return (
-    <Card className="w-full max-w-2xl mx-auto p-8 shadow-sm">
+    <Card className="w-full max-w-2xl mx-auto p-8 card-premium border-0">
       {/* Question */}
       <div className="space-y-2 mb-8">
         <h2 className="text-xl font-semibold leading-snug text-foreground">
@@ -62,20 +61,24 @@ export function QuestionCard({
               <button
                 key={choice.value}
                 onClick={() => handleChoice(choice.value)}
-                className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${
+                className={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all cursor-pointer ${
                   localValue === choice.value
-                    ? "border-primary bg-primary/5 text-foreground"
-                    : "border-border bg-background hover:border-primary/40 hover:bg-muted/50"
+                    ? "border-[var(--primary)] bg-[var(--primary)]/10 text-foreground shadow-[0_0_0_1px_var(--primary)]"
+                    : "border-border bg-background hover:border-[var(--primary)]/50 hover:bg-muted/30"
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`w-4 h-4 rounded-full border-2 shrink-0 transition-all ${
+                    className={`w-5 h-5 rounded-full border-2 shrink-0 transition-all flex items-center justify-center ${
                       localValue === choice.value
-                        ? "border-primary bg-primary"
-                        : "border-muted-foreground"
+                        ? "border-[var(--primary)] bg-[var(--primary)]"
+                        : "border-muted-foreground/50"
                     }`}
-                  />
+                  >
+                    {localValue === choice.value && (
+                      <div className="w-2 h-2 bg-background rounded-full" />
+                    )}
+                  </div>
                   <div>
                     <p className="font-medium text-sm">{choice.label}</p>
                     {choice.description && (
@@ -98,10 +101,10 @@ export function QuestionCard({
                 <button
                   key={v}
                   onClick={() => handleChoice(v)}
-                  className={`flex-1 py-3 rounded-xl border-2 font-medium text-sm transition-all ${
+                  className={`flex-1 py-4 rounded-xl border-2 font-semibold text-[15px] transition-all cursor-pointer ${
                     localValue === v
-                      ? "border-primary bg-primary/5 text-foreground"
-                      : "border-border hover:border-primary/40"
+                      ? "border-[var(--primary)] bg-[var(--primary)]/10 text-foreground shadow-[0_0_0_1px_var(--primary)]"
+                      : "border-border hover:border-[var(--primary)]/50 bg-background"
                   }`}
                 >
                   {opt}
@@ -116,7 +119,7 @@ export function QuestionCard({
             type={question.type === "number" ? "number" : "text"}
             value={localValue}
             onChange={(e) => handleTextChange(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border-2 border-border bg-background focus:border-primary focus:outline-none text-foreground text-sm transition-colors"
+            className="input-premium w-full"
             placeholder={
               question.type === "number" ? "Enter amount in €" : "Type your answer"
             }
@@ -128,7 +131,7 @@ export function QuestionCard({
             type="date"
             value={localValue}
             onChange={(e) => handleTextChange(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border-2 border-border bg-background focus:border-primary focus:outline-none text-foreground text-sm transition-colors"
+            className="input-premium w-full text-foreground/80"
           />
         )}
       </div>
@@ -137,24 +140,23 @@ export function QuestionCard({
       <LawContext question={question} />
 
       {/* Navigation */}
-      <div className="flex justify-between mt-8 pt-6 border-t border-border">
-        <Button
-          variant="ghost"
+      <div className="flex justify-between mt-8 pt-8 border-t border-border">
+        <button
           onClick={onBack}
           disabled={isFirst}
-          className="gap-2"
+          className={`btn-secondary flex items-center justify-center gap-2 ${isFirst ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
         >
           <ArrowLeft className="w-4 h-4" />
           Back
-        </Button>
-        <Button
+        </button>
+        <button
           onClick={onNext}
           disabled={!canProceed}
-          className="gap-2"
+          className={`btn-primary flex items-center justify-center gap-2 ${!canProceed ? 'opacity-50 cursor-not-allowed pointer-events-none hover:-translate-y-0' : ''}`}
         >
-          {isLast ? "Finish" : "Continue"}
+          {isLast ? "Review" : "Continue"}
           {!isLast && <ArrowRight className="w-4 h-4" />}
-        </Button>
+        </button>
       </div>
     </Card>
   );

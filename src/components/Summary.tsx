@@ -2,7 +2,6 @@
 
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
 import { isTrue, type TaxProfile } from "@/types/tax";
 
 interface SummaryProps {
@@ -90,9 +89,9 @@ function buildAlerts(profile: TaxProfile): Alert[] {
 }
 
 const alertColors = {
-  green: "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800 text-green-900 dark:text-green-100",
-  yellow: "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-100",
-  red: "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 text-red-900 dark:text-red-100",
+  green: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+  yellow: "bg-amber-500/10 border-amber-500/20 text-amber-500",
+  red: "bg-rose-500/10 border-rose-500/20 text-rose-400",
 };
 
 const alertIcons = { green: "🟢", yellow: "🟡", red: "🔴" };
@@ -122,7 +121,7 @@ export function Summary({ profile, onReset }: SummaryProps) {
 
       {/* Alerts */}
       {alerts.length > 0 && (
-        <Card className="p-5 space-y-3">
+        <Card className="p-6 space-y-4 card-premium border-0">
           <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
             Alerts & Flags
           </h2>
@@ -139,7 +138,7 @@ export function Summary({ profile, onReset }: SummaryProps) {
       )}
 
       {/* Profile summary */}
-      <Card className="p-5 space-y-4">
+      <Card className="p-6 space-y-5 card-premium border-0">
         <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
           Your Answers
         </h2>
@@ -170,7 +169,7 @@ export function Summary({ profile, onReset }: SummaryProps) {
       </Card>
 
       {/* Document checklist */}
-      <Card className="p-5 space-y-4">
+      <Card className="p-6 space-y-5 card-premium border-0">
         <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
           Document Checklist
         </h2>
@@ -207,15 +206,15 @@ export function Summary({ profile, onReset }: SummaryProps) {
             href="https://mijn.belastingdienst.nl"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 dark:text-blue-400 hover:underline"
+            className="text-blue-600 dark:text-[var(--primary)] hover:underline"
           >
             Mijn Belastingdienst ↗
           </a>{" "}
           with DigiD and file your return.
         </p>
-        <Button variant="outline" size="sm" onClick={onReset}>
+        <button className="btn-secondary text-sm px-4 py-2" onClick={onReset}>
           Start over
-        </Button>
+        </button>
       </div>
     </div>
   );
