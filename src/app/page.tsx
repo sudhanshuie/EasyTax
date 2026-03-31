@@ -1,16 +1,23 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useTaxStore } from "@/store/taxStore";
 import { questions } from "@/data/questions";
 import { ProgressBar } from "@/components/ProgressBar";
 import { QuestionCard } from "@/components/QuestionCard";
 import { Summary } from "@/components/Summary";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, FileText, Bot } from "lucide-react";
+import { BeamsBackground } from "@/components/ui/beams-background";
+import { Button } from "@/components/ui/button";
+import { motion } from "motion/react";
 
 export default function Home() {
-  const { profile, currentStep, updateProfile, nextStep, prevStep, reset } =
-    useTaxStore();
+  const [mounted, setMounted] = useState(false);
+  const { profile, currentStep, hasStarted, updateProfile, nextStep, prevStep, reset, startReport } = useTaxStore();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Filter to only questions that should be shown given current profile state
   const visibleQuestions = useMemo(
@@ -29,15 +36,76 @@ export default function Home() {
     updateProfile({ [currentQuestion.profileKey]: value });
   };
 
+  if (!mounted) return null; // Avoid hydration mismatch
+
+  if (!hasStarted) {
+    return (
+      <BeamsBackground intensity="strong">
+        <div className="flex flex-col items-center justify-center gap-8 px-4 text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            className="flex items-center gap-3 mb-2"
+          >
+            <ShieldCheck className="w-10 h-10 text-[var(--primary)]" />
+            <span className="font-bold text-3xl tracking-tight text-white">EasyTax</span>
+          </motion.div>
+          <motion.h1
+            className="text-5xl md:text-7xl lg:text-8xl font-semibold text-white tracking-tighter max-w-4xl"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+          >
+            File your Dutch taxes <br className="hidden md:block" /> with certainty
+          </motion.h1>
+          <motion.p
+            className="text-lg md:text-2xl text-white/70 tracking-tight max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            The free, AI-powered tax assistant engineered for everyone—whether you're a local or an expat.
+          </motion.p>
+          
+          <motion.div 
+            className="flex flex-col sm:flex-row gap-4 mt-8 w-full max-w-md mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            <Button 
+                onClick={startReport} 
+                className="w-full h-14 text-lg gap-2 cursor-pointer"
+                size="lg"
+            >
+                <FileText className="w-5 h-5" />
+                Start Tax Report
+            </Button>
+            <Button 
+                variant="outline"
+                className="w-full h-14 text-lg gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white cursor-pointer"
+                size="lg"
+                onClick={() => alert("AI Agent integration coming soon!")}
+            >
+                <Bot className="w-5 h-5" />
+                Ask AI Agent
+            </Button>
+          </motion.div>
+        </div>
+      </BeamsBackground>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-background flex flex-col items-center pt-8 pb-12">
       {/* Header */}
       <header className="w-full max-w-2xl px-4 flex items-center justify-between mb-8 sm:mb-12">
-        <div className="flex items-center gap-2 text-foreground">
+        <div className="flex items-center gap-2 text-foreground cursor-pointer" onClick={reset}>
           <ShieldCheck className="w-6 h-6 text-[var(--primary)]" />
           <span className="font-bold text-lg tracking-tight">EasyTax</span>
         </div>
-        {currentStep > 0 && !isDone && (
+        {hasStarted && (
           <button
             onClick={reset}
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
@@ -48,18 +116,6 @@ export default function Home() {
       </header>
 
       <div className="w-full max-w-2xl px-4 space-y-8">
-        {/* Intro headline on first question */}
-        {currentStep === 0 && !isDone && (
-          <div className="text-center space-y-4 mb-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">
-              File your Dutch taxes with certainty
-            </h1>
-            <p className="text-muted-foreground text-base md:text-lg max-w-lg mx-auto">
-              The smart, guided tax assistant engineered specifically for Indian expats in the Netherlands.
-            </p>
-          </div>
-        )}
-
         {/* Progress bar */}
         {!isDone && currentQuestion && (
           <ProgressBar
