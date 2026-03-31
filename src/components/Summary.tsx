@@ -85,6 +85,89 @@ function buildAlerts(profile: TaxProfile): Alert[] {
     });
   }
 
+  // Stage 5 — Housing
+  if (isTrue(profile.ownsHomeInNL)) {
+    if (profile.wozValueEUR && profile.mortgageInterestEUR) {
+      const eigenwoningforfait = Math.round(profile.wozValueEUR * 0.0035);
+      const deductionCap = 0.3748;
+      const netDeduction = Math.round(profile.mortgageInterestEUR * deductionCap - eigenwoningforfait);
+      if (netDeduction > 0) {
+        alerts.push({
+          type: "green",
+          message: `Your mortgage interest deduction (~€${(profile.mortgageInterestEUR).toLocaleString()} × 37.48%) minus eigenwoningforfait (€${eigenwoningforfait.toLocaleString()}) gives an estimated net Box 1 reduction of ~€${netDeduction.toLocaleString()}.`,
+        });
+      }
+    } else if (!profile.mortgageInterestEUR) {
+      alerts.push({
+        type: "yellow",
+        message: "You own a Dutch home but didn't enter mortgage interest. If you have a mortgage, the interest is deductible — enter it to get an accurate tax estimate.",
+      });
+    }
+    if (profile.wozValueEUR && profile.wozValueEUR > 1330000) {
+      alerts.push({
+        type: "yellow",
+        message: `Your home's WOZ value (€${profile.wozValueEUR.toLocaleString()}) exceeds €1,330,000. The higher eigenwoningforfait rate of 2.35% applies to the excess — your notional rental income will be higher.`,
+      });
+    }
+  }
+
+  // Box 3 — assets above threshold
+  if (isTrue(profile.hasBoxThreeAssets)) {
+    const box3Threshold = profile.maritalStatus === "married" || profile.maritalStatus === "registered_partner"
+      ? (year === "2026" ? 118714 : 114000)
+      : (year === "2026" ? 59357 : 57000);
+    const totalAssets =
+      (profile.dutchBankBalanceEUR ?? 0) + (profile.indianAssetsValueEUR ?? 0);
+    if (totalAssets > box3Threshold) {
+      alerts.push({
+        type: "red",
+        message: `Your declared assets (~€${totalAssets.toLocaleString()}) exceed the Box 3 tax-free allowance of €${box3Threshold.toLocaleString()}. The surplus will be taxed at the notional rate. Gather all January 1 balance statements.`,
+      });
+    } else if (totalAssets > 0) {
+      alerts.push({
+        type: "green",
+        message: `Your declared assets (~€${totalAssets.toLocaleString()}) are within the Box 3 tax-free allowance of €${box3Threshold.toLocaleString()}. No Box 3 tax is expected.`,
+      });
+    }
+  }
+
+  // Indian assets not declared
+  if (isTrue(profile.hasBoxThreeAssets) && isTrue(profile.hasIndianAssets) && !profile.indianAssetsValueEUR) {
+    alerts.push({
+      type: "yellow",
+      message: "You indicated Indian assets but didn't enter a value. Remember: NRE/NRO accounts, mutual funds, EPF, and PPF must all be declared in Box 3 as a Dutch tax resident.",
+    });
+  }
+
+  // Actual Return Method opted in
+  if (profile.useActualReturnMethod === "yes") {
+    alerts.push({
+      type: "yellow",
+      message: "You selected the Actual Return Method (OWR) for Box 3. You'll need full-year statements for all interest, dividends, and capital gains. The €59,357 tax-free allowance does NOT apply under this method.",
+    });
+  } else if (profile.useActualReturnMethod === "help") {
+    alerts.push({
+      type: "yellow",
+      message: "To decide between OWR and notional rates: calculate your actual return (interest + dividends + gains) and compare it to the notional rate applied to your total assets (~5.88% for investments, ~1.03% for savings in 2026). Choose the method that gives the lower taxable amount.",
+    });
+  }
+
+  // Indian property rental
+  if (profile.indianPropertyUse === "rented") {
+    alerts.push({
+      type: "yellow",
+      message: "You receive rental income from Indian property. India has the primary right to tax this under Art. 6 of the DTT — but you must still declare it in your Dutch return. NL will apply the exemption-with-progression rule.",
+    });
+  }
+
+  // Dividends withholding credit
+  if (isTrue(profile.receivedDividends) && profile.dividendAmountEUR) {
+    alerts.push({
+      type: "green",
+      message: `You received ~€${profile.dividendAmountEUR.toLocaleString()} in dividends. Any Dutch dividendbelasting (15%) withheld can be credited against your income tax. Keep your dividend certificates (dividendnota) and broker statements.`,
+    });
+  }
+
   return alerts;
 }
 
@@ -100,11 +183,18 @@ const docChecklist = [
   { label: "Jaaropgaaf from your employer(s)", always: true },
   { label: "30% ruling decision letter (beschikking)", key: "hasRulingDecisionLetter" },
   { label: "BSN document (DigiD letter or salary slip)", always: true },
-  { label: "WOZ beschikking (property value from gemeente)", always: false },
+  { label: "WOZ beschikking from your gemeente (home value letter)", key: "wozBeschikking" },
+  { label: "Jaaropgave hypotheek — annual mortgage interest statement from your lender", key: "mortgage" },
   { label: "Indian income documents (Form 16, bank statements)", key: "indianIncome" },
   { label: "Travel records for India work days", key: "workedDaysInIndia" },
   { label: "Partner's BSN and income details (if fiscal partner)", key: "partnerInNL" },
   { label: "Children's birth certificates & school letters", key: "hasChildren" },
+  // Box 3
+  { label: "Dutch bank January 1 balance statement (Box 3)", key: "dutchBankBalance" },
+  { label: "Indian asset statements on January 1 (NRE/NRO, EPF, mutual funds, PPF)", key: "indianAssets" },
+  { label: "Indian property valuation / circle rate certificate", key: "indianProperty" },
+  { label: "Full-year interest, dividend & capital gains statements (for Actual Return Method)", key: "actualReturn" },
+  { label: "Dividend certificates / broker annual statement (dividendnota)", key: "dividends" },
 ];
 
 export function Summary({ profile, onReset }: SummaryProps) {
@@ -157,6 +247,14 @@ export function Summary({ profile, onReset }: SummaryProps) {
             ["India work days", profile.workedDaysInIndia != null ? String(profile.workedDaysInIndia) : null],
             ["Indian income", profile.indianIncome != null ? (isTrue(profile.indianIncome) ? `Yes — ~€${profile.indianIncomeAmountEUR?.toLocaleString() ?? "?"}` : "No") : null],
             ["Bonus/RSU", profile.receivedBonus != null ? (isTrue(profile.receivedBonus) ? `Yes — €${profile.bonusAmountEUR?.toLocaleString() ?? "?"}` : "No") : null],
+            ["Owns Dutch home", profile.ownsHomeInNL != null ? (isTrue(profile.ownsHomeInNL) ? "Yes" : "No — renting") : null],
+            ["WOZ value", profile.wozValueEUR != null ? `€${profile.wozValueEUR.toLocaleString()}` : null],
+            ["Mortgage interest paid", profile.mortgageInterestEUR != null ? `€${profile.mortgageInterestEUR.toLocaleString()}` : null],
+            ["Dutch bank balance (Jan 1)", profile.dutchBankBalanceEUR != null ? `€${profile.dutchBankBalanceEUR.toLocaleString()}` : null],
+            ["Indian assets (Jan 1)", profile.hasIndianAssets != null ? (isTrue(profile.hasIndianAssets) ? `Yes — ~€${profile.indianAssetsValueEUR?.toLocaleString() ?? "?"}` : "No") : null],
+            ["Indian property", profile.ownsPropertyInIndia != null ? (isTrue(profile.ownsPropertyInIndia) ? `Yes — ${profile.indianPropertyUse?.replace("_", " ") ?? "?"}` : "No") : null],
+            ["Box 3 method", profile.useActualReturnMethod != null ? (profile.useActualReturnMethod === "yes" ? "Actual return (OWR)" : profile.useActualReturnMethod === "no" ? "Notional rate" : "Undecided") : null],
+            ["Dividends", profile.receivedDividends != null ? (isTrue(profile.receivedDividends) ? `Yes — €${profile.dividendAmountEUR?.toLocaleString() ?? "?"}` : "No") : null],
           ]
             .filter(([, v]) => v != null)
             .map(([label, val]) => (
@@ -184,7 +282,14 @@ export function Summary({ profile, onReset }: SummaryProps) {
               (item.key === "indianIncome" && isTrue(profile.indianIncome)) ||
               (item.key === "workedDaysInIndia" && profile.workedDaysInIndia != null && Number(profile.workedDaysInIndia) > 0) ||
               (item.key === "partnerInNL" && isTrue(profile.partnerInNL)) ||
-              (item.key === "hasChildren" && isTrue(profile.hasChildren));
+              (item.key === "hasChildren" && isTrue(profile.hasChildren)) ||
+              (item.key === "wozBeschikking" && isTrue(profile.ownsHomeInNL)) ||
+              (item.key === "mortgage" && isTrue(profile.ownsHomeInNL)) ||
+              (item.key === "dutchBankBalance" && isTrue(profile.hasBoxThreeAssets)) ||
+              (item.key === "indianAssets" && isTrue(profile.hasIndianAssets)) ||
+              (item.key === "indianProperty" && isTrue(profile.ownsPropertyInIndia)) ||
+              (item.key === "actualReturn" && profile.useActualReturnMethod === "yes") ||
+              (item.key === "dividends" && isTrue(profile.receivedDividends));
 
             if (!relevant) return null;
             return (

@@ -559,4 +559,289 @@ export const questions: Question[] = [
         "Your passport (date of birth) and university degree certificate. For Indian degrees, a certified English translation is recommended.",
     },
   },
+
+  // ── Stage 5: Home & Housing ──────────────────────────────────────────────
+
+  {
+    id: "ownsHomeInNL",
+    stage: 5,
+    stageLabel: "Home & Housing",
+    type: "choice",
+    question: "Do you own your home in the Netherlands (eigen woning)?",
+    profileKey: "ownsHomeInNL",
+    choices: [
+      {
+        value: "true",
+        label: "Yes — I own my Dutch home (with or without a mortgage)",
+        description: "Owner-occupied property is in Box 1. Mortgage interest is deductible.",
+      },
+      {
+        value: "false",
+        label: "No — I rent my home",
+        description: "Rented property is not in Box 1. You may be eligible for huurtoeslag.",
+      },
+    ],
+    lawContext: {
+      plainEnglish:
+        "In the Netherlands, your own home (eigen woning) is treated as Box 1 income — not Box 3. This means you add a small notional rental income (eigenwoningforfait) to your taxable income, but in return you can deduct all mortgage interest you paid. For most homeowners with a mortgage, the deduction significantly outweighs the eigenwoningforfait. Renters do not have this deduction, but may qualify for huurtoeslag (rent subsidy) if their income is below ~€34,678 (2026).",
+      lawArticle:
+        "IB 2001, Art. 3.110–3.123 — own home provisions (eigen woning regime). Eigenwoningforfait: Art. 3.112.",
+      whereToFind:
+        "Your mortgage statement (hypotheekopgaaf) from your bank — issued annually in January/February. Your purchase deed (leveringsakte) from the notary confirms ownership.",
+    },
+  },
+  {
+    id: "wozValueEUR",
+    stage: 5,
+    stageLabel: "Home & Housing",
+    type: "number",
+    question: "What is the WOZ value of your Dutch home (in €)?",
+    subtext:
+      "Use the WOZ value from the beschikking you received this year — it reflects the value on January 1 of the reference year.",
+    profileKey: "wozValueEUR",
+    showIf: (p) => p.ownsHomeInNL === "true",
+    lawContext: {
+      plainEnglish:
+        "The WOZ (Wet waardering onroerende zaken) value is the municipality's assessed value of your home. It is used to calculate the eigenwoningforfait — the notional rental income added to your Box 1 taxable income. In 2026, this is 0.35% of the WOZ value for homes up to €1,330,000. For a home worth €400,000, the eigenwoningforfait is €1,400/year — modest compared to the mortgage interest deduction.",
+      lawArticle:
+        "IB 2001, Art. 3.112 — eigenwoningforfait rates. Wet WOZ — municipal property valuation.",
+      whereToFind:
+        "The WOZ beschikking is a letter sent by your gemeente (municipality) every year in February/March. You can also look it up online at WOZ-waardeloket.nl — search by your home address.",
+    },
+  },
+  {
+    id: "mortgageInterestEUR",
+    stage: 5,
+    stageLabel: "Home & Housing",
+    type: "number",
+    question: "What was your total mortgage interest paid this year (in €)?",
+    subtext:
+      "Enter the total interest component only — not the capital repayments (aflossing).",
+    profileKey: "mortgageInterestEUR",
+    showIf: (p) => p.ownsHomeInNL === "true",
+    lawContext: {
+      plainEnglish:
+        "Mortgage interest on your main Dutch home is deductible from Box 1 income — this is called hypotheekrenteaftrek. However, since 2023 the deduction is capped at the second tax bracket rate of 37.48%, even if you're in the 49.50% bracket. Example: if you paid €10,000 in interest and you're in the 49.50% bracket, you only save 37.48% × €10,000 = €3,748 (not €4,950). The deduction is only available for mortgages that are fully repaid within 30 years (annuity or linear repayment).",
+      lawArticle:
+        "IB 2001, Art. 3.120 — hypotheekrenteaftrek (mortgage interest deduction). Art. 3.123 — maximum deduction rate capped at 37.48% (since 2023).",
+      whereToFind:
+        "The jaaropgave hypotheek — an annual statement from your mortgage lender (ING, ABN AMRO, Rabobank, Nationale Nederlanden, etc.) showing total interest paid in the calendar year. Usually sent in January.",
+    },
+  },
+
+  // ── Stage 4: Box 3 — Savings, Investments & Assets ──────────────────────
+
+  {
+    id: "hasBoxThreeAssets",
+    stage: 4,
+    stageLabel: "Box 3 — Assets",
+    type: "choice",
+    question:
+      "On January 1 of this tax year, did you hold any bank accounts, savings, or investments — in the Netherlands or abroad?",
+    subtext:
+      "Box 3 taxes your net wealth above the tax-free allowance (€59,357 for singles, €118,714 for partners in 2026). The reference date is always January 1.",
+    profileKey: "hasBoxThreeAssets",
+    choices: [
+      { value: "true", label: "Yes — I held savings, investments, or other assets" },
+      { value: "false", label: "No — I had no savings or investments on January 1" },
+    ],
+    lawContext: {
+      plainEnglish:
+        "Box 3 is the Dutch wealth tax. Every year on January 1, the tax authority takes a snapshot of all your assets worldwide. If your total net assets exceed €59,357 (single) or €118,714 (fiscal partners), the excess is taxed at a notional rate. Even assets you sold on January 2 count — the cut-off is midnight on January 1.",
+      lawArticle:
+        "IB 2001, Art. 5.1–5.3 — Box 3 savings and investments. Reference date: Art. 5.2.",
+      whereToFind:
+        "Bank statements dated January 1, brokerage account summaries (DEGIRO, Trading 212), and investment platform annual overviews.",
+    },
+  },
+  {
+    id: "dutchBankBalanceEUR",
+    stage: 4,
+    stageLabel: "Box 3 — Assets",
+    type: "number",
+    question: "What was the total balance of your Dutch bank accounts on January 1 (in €)?",
+    subtext: "Include all Dutch current accounts, savings accounts, and deposit accounts.",
+    profileKey: "dutchBankBalanceEUR",
+    showIf: (p) => p.hasBoxThreeAssets === "true",
+    lawContext: {
+      plainEnglish:
+        "Dutch banks (ING, ABN AMRO, Rabobank, etc.) automatically report your January 1 balance to Belastingdienst. Your return will often be pre-filled with this figure — but you must verify it. Errors do occur, especially for newly opened or closed accounts.",
+      lawArticle:
+        "IB 2001, Art. 5.3(2)(f) — bank deposits are Box 3 assets.",
+      whereToFind:
+        "Your Dutch bank's January 1 balance statement or annual Box 3 overview, usually available in the bank's app or sent by post in January.",
+    },
+  },
+  {
+    id: "hasIndianAssets",
+    stage: 4,
+    stageLabel: "Box 3 — Assets",
+    type: "choice",
+    question:
+      "Do you hold savings or investments in India? (NRE/NRO accounts, mutual funds, shares, PPF, EPF, etc.)",
+    profileKey: "hasIndianAssets",
+    showIf: (p) => p.hasBoxThreeAssets === "true",
+    choices: [
+      { value: "true", label: "Yes — I have Indian savings, funds, or investment accounts" },
+      { value: "false", label: "No — all my assets are in the Netherlands" },
+    ],
+    lawContext: {
+      plainEnglish:
+        "As a Dutch tax resident you must declare worldwide assets in Box 3 — including NRE/NRO accounts, mutual funds (SIP/Zerodha/Groww), EPF/PPF balances, and unlisted shares. Indian EPF may be exempt under the India–NL Tax Treaty, but this needs case-by-case analysis. Failing to declare foreign assets can result in a 12-year re-assessment period instead of the normal 5 years.",
+      lawArticle:
+        "IB 2001, Art. 5.3 — worldwide assets. India–NL DTT, Art. 22 (other income) may provide relief for certain Indian funds.",
+      whereToFind:
+        "NRE/NRO: Bank statements from Indian bank on January 1. Mutual funds / demat: CDSL/NSDL statement or Zerodha/Groww annual report. EPF: EPFO passbook at epfindia.gov.in. PPF: Bank or post-office PPF statement.",
+    },
+  },
+  {
+    id: "indianAssetsValueEUR",
+    stage: 4,
+    stageLabel: "Box 3 — Assets",
+    type: "number",
+    question:
+      "What is the total value of your Indian assets on January 1 (converted to €)?",
+    subtext:
+      "Use the RBI reference rate on January 1 of the tax year. Approximate values are fine at this stage.",
+    profileKey: "indianAssetsValueEUR",
+    showIf: (p) => p.hasIndianAssets === "true",
+    lawContext: {
+      plainEnglish:
+        "You need to convert Indian asset values to euros using the exchange rate on January 1 (not the rate when you bought them). The official rate to use is the ECB or RBI reference rate on that date. For the 2026 filing: the EUR/INR rate on 1 Jan 2026 was approximately ₹90 per €1 — so ₹9,00,000 = €10,000.",
+      lawArticle:
+        "IB 2001, Art. 5.3 — foreign assets included at fair market value in euros.",
+      whereToFind:
+        "Sum up: NRE/NRO account balance + mutual fund NAV × units + EPF balance + PPF balance + demat portfolio value on January 1. Convert to EUR using RBI/ECB rate on that date.",
+    },
+  },
+  {
+    id: "ownsPropertyInIndia",
+    stage: 4,
+    stageLabel: "Box 3 — Assets",
+    type: "choice",
+    question: "Do you own property in India?",
+    profileKey: "ownsPropertyInIndia",
+    choices: [
+      { value: "true", label: "Yes — I own property in India" },
+      { value: "false", label: "No" },
+    ],
+    lawContext: {
+      plainEnglish:
+        "Foreign property (other than your primary home abroad in certain treaty situations) is a Box 3 asset. You must include its fair market value — typically estimated using the circle rate (stamp duty value) published by the local authority. Rental income from Indian property may also be subject to Dutch reporting, though India usually has the primary taxing right.",
+      lawArticle:
+        "IB 2001, Art. 5.3(2)(a) — real estate is a Box 3 asset. India–NL DTT, Art. 6 — both countries may tax income from immovable property.",
+      whereToFind:
+        "Property registration documents (sale deed), municipal corporation valuation certificate, or circle rate × area as a proxy for market value.",
+    },
+  },
+  {
+    id: "indianPropertyUse",
+    stage: 4,
+    stageLabel: "Box 3 — Assets",
+    type: "choice",
+    question: "How is your Indian property used?",
+    profileKey: "indianPropertyUse",
+    showIf: (p) => p.ownsPropertyInIndia === "true",
+    choices: [
+      {
+        value: "primary_residence",
+        label: "Primary residence — family lives there (not rented out)",
+        description: "Still a Box 3 asset unless a treaty exemption applies.",
+      },
+      {
+        value: "rented",
+        label: "Rented out — I receive rental income",
+        description: "Both the property value and rental income must be reported.",
+      },
+      {
+        value: "vacant",
+        label: "Vacant / under construction",
+        description: "Box 3 asset based on market value; no rental income to report.",
+      },
+    ],
+    lawContext: {
+      plainEnglish:
+        "How the property is used changes what you need to report. Rented property: declare both the Box 3 asset value AND the rental income (India has primary taxation right under Art. 6 DTT, but NL must be informed). Family home: declare as Box 3 asset; you may receive credit if India has already taxed any deemed income. Vacant: declare at market value — no rental income to report.",
+      lawArticle:
+        "IB 2001, Art. 5.3(2)(a). India–NL DTT, Art. 6 (immovable property) and Art. 23 (elimination of double taxation).",
+      whereToFind:
+        "Your rental agreement (if rented) or a statement from the property manager. For vacant/family-use: circle rate certificate from the sub-registrar office.",
+    },
+  },
+  {
+    id: "useActualReturnMethod",
+    stage: 4,
+    stageLabel: "Box 3 — Assets",
+    type: "choice",
+    question:
+      "Do you want to use the Actual Return Method (werkelijk rendement) for Box 3?",
+    subtext:
+      "Available from 2025. Instead of the notional rates, you're taxed only on what your assets actually earned.",
+    profileKey: "useActualReturnMethod",
+    showIf: (p) => p.hasBoxThreeAssets === "true",
+    choices: [
+      {
+        value: "yes",
+        label: "Yes — I want to use actual returns",
+        description: "Good if your actual return is lower than the notional rate (e.g. cash savings with low interest).",
+      },
+      {
+        value: "no",
+        label: "No — use the standard notional rate method",
+        description: "Simpler; often better if your investments performed well.",
+      },
+      {
+        value: "help",
+        label: "Help me decide",
+        description: "I'm not sure which method results in lower tax.",
+      },
+    ],
+    lawContext: {
+      plainEnglish:
+        "From 2025, you can choose between two Box 3 calculation methods: (1) Notional return method — tax is based on assumed returns (approx. 1.03% for savings, 5.88% for investments in 2026), regardless of actual performance. (2) Actual return method (OWR) — tax is based on real interest, dividends, and capital gains. Note: the €59,357 tax-free allowance does NOT apply under the OWR method. The OWR tends to save tax if you held mostly cash savings with low interest rates.",
+      lawArticle:
+        "IB 2001, Art. 5.1 amended — OWR option introduced following Supreme Court ruling: ECLI:NL:HR:2021:1963 (December 2021).",
+      whereToFind:
+        "To use OWR, you need actual annual interest certificates from your bank, dividend statements, and capital gains records for the full year.",
+    },
+  },
+  {
+    id: "receivedDividends",
+    stage: 4,
+    stageLabel: "Box 3 — Assets",
+    type: "choice",
+    question: "Did you receive dividends from Dutch or foreign stocks this year?",
+    profileKey: "receivedDividends",
+    choices: [
+      { value: "true", label: "Yes — I received dividends" },
+      { value: "false", label: "No" },
+    ],
+    lawContext: {
+      plainEnglish:
+        "Dutch dividends have 15% withholding tax (dividendbelasting) deducted at source. You can credit this against your Box 3 income tax — so you only pay the difference. Indian dividends may have up to 15% Indian withholding under Art. 10 of the DTT. Both are reportable in Box 3 as part of the actual return method, or simply as assets under the notional method.",
+      lawArticle:
+        "Wet DB 1965 — dividend withholding tax. India–NL DTT, Art. 10 — maximum 15% withholding on dividends.",
+      whereToFind:
+        "Your broker's annual dividend statement (DEGIRO annual report, Trading 212 statement, Zerodha P&L). Dutch companies also send a dividend tax certificate (dividendnota).",
+    },
+  },
+  {
+    id: "dividendAmountEUR",
+    stage: 4,
+    stageLabel: "Box 3 — Assets",
+    type: "number",
+    question: "What is the total gross dividend amount you received this year (in €)?",
+    subtext:
+      "Enter the gross amount before any withholding tax was deducted. Include both Dutch and foreign dividends.",
+    profileKey: "dividendAmountEUR",
+    showIf: (p) => p.receivedDividends === "true",
+    lawContext: {
+      plainEnglish:
+        "Use the gross dividend (before withholding). For Dutch stocks, the gross amount is on your dividendnota. For foreign stocks, it's the amount before the foreign country deducted its withholding tax. The withheld tax (Dutch or foreign) is separately creditable when filing.",
+      lawArticle:
+        "IB 2001, Art. 9.2 — tax credits for withheld dividendbelasting. India–NL DTT, Art. 10 and Art. 23 — credit for Indian withholding.",
+      whereToFind:
+        "DEGIRO annual report (Jaaroverzicht), broker statements, or individual dividend certificates from Dutch companies.",
+    },
+  },
 ];

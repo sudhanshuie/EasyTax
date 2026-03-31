@@ -39,6 +39,22 @@ export interface TaxProfile {
   livedOutside150km: BoolStr;
   salaryAtHire: number | null;
   under30WithMasters: BoolStr;
+
+  // Stage 5 — Home & Housing
+  ownsHomeInNL: BoolStr;
+  wozValueEUR: number | null;
+  mortgageInterestEUR: number | null;
+
+  // Stage 4 — Box 3: Savings, Investments & Assets
+  hasBoxThreeAssets: BoolStr;
+  dutchBankBalanceEUR: number | null;
+  hasIndianAssets: BoolStr;
+  indianAssetsValueEUR: number | null;
+  ownsPropertyInIndia: BoolStr;
+  indianPropertyUse: "primary_residence" | "rented" | "vacant" | null;
+  useActualReturnMethod: "yes" | "no" | "help" | null;
+  receivedDividends: BoolStr;
+  dividendAmountEUR: number | null;
 }
 
 export const emptyProfile: TaxProfile = {
@@ -67,6 +83,22 @@ export const emptyProfile: TaxProfile = {
   livedOutside150km: null,
   salaryAtHire: null,
   under30WithMasters: null,
+
+  // Stage 5
+  ownsHomeInNL: null,
+  wozValueEUR: null,
+  mortgageInterestEUR: null,
+
+  // Stage 4
+  hasBoxThreeAssets: null,
+  dutchBankBalanceEUR: null,
+  hasIndianAssets: null,
+  indianAssetsValueEUR: null,
+  ownsPropertyInIndia: null,
+  indianPropertyUse: null,
+  useActualReturnMethod: null,
+  receivedDividends: null,
+  dividendAmountEUR: null,
 };
 
 // Helper to check a BoolStr or string as truthy

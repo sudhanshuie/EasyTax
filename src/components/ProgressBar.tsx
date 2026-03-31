@@ -8,6 +8,8 @@ const STAGE_LABELS = [
   "Personal & Family",
   "Employment & Income",
   "30% Ruling",
+  "Box 3 — Assets",
+  "Home & Housing",
 ];
 
 interface ProgressBarProps {
